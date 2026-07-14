@@ -1,8 +1,8 @@
 streamlit==1.47.1
-tensorflow==2.16.2
-numpy==1.26.4
-pandas==2.2.2
-Pillow==10.4.0
-opencv-python-headless==4.10.0.84
-scikit-learn==1.5.1
-matplotlib==3.9.2
+tensorflow==2.20.0
+numpy==2.0.2
+pandas==2.2.3
+Pillow==11.0.0
+opencv-python-headless==4.11.0.86
+scikit-learn==1.6.1
+matplotlib==3.10.0
