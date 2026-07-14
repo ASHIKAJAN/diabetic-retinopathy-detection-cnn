@@ -84,7 +84,8 @@ def load_model():
 
     model = tf.keras.models.load_model(
         model_path,
-        compile=False
+        compile=False,
+        safe_mode=False
     )
 
     return model
