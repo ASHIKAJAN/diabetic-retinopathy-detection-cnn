@@ -81,8 +81,14 @@ set_background(BACKGROUND_IMAGE)
 @st.cache_resource
 def load_model():
 
+  @st.cache_resource
+def load_model():
+
+    model_path = "mobilenetv2_best_77.keras"
+
     model = tf.keras.models.load_model(
-        "mobilenetv2_best_77.keras"
+        model_path,
+        compile=False
     )
 
     return model
