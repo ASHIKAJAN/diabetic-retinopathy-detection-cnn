@@ -77,11 +77,7 @@ set_background(BACKGROUND_IMAGE)
 # LOAD MODEL
 # ==========================
 
-
 @st.cache_resource
-def load_model():
-
-  @st.cache_resource
 def load_model():
 
     model_path = "mobilenetv2_best_77.keras"
