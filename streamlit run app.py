@@ -20,8 +20,8 @@ st.set_page_config(
 # IMAGE PATHS
 # ==========================
 
-BACKGROUND_IMAGE = r"C:\Users\ashik\Downloads\image_bg.jpg"
-DEVELOPER_IMAGE = r"C:\Users\ashik\Downloads\person.jpg"
+BACKGROUND_IMAGE = "image_bg.jpg"
+DEVELOPER_IMAGE = "person.jpg"
 
 # ==========================
 # BACKGROUND FUNCTION
