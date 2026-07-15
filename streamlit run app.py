@@ -83,13 +83,13 @@ def save_users(users):
 # LOAD MODEL
 # ====================================
 
+
 @st.cache_resource
 def load_model():
 
     model = tf.keras.models.load_model(
-        "mobilenetv2_best_77.keras",
-        compile=False,
-        safe_mode=False
+        "mobilenetv2_best_77.h5",
+        compile=False
     )
 
     return model
