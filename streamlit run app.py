@@ -3,14 +3,13 @@ import tensorflow as tf
 import numpy as np
 import cv2
 import pickle
-from PIL import Image
 import base64
 import os
+from PIL import Image
 
-
-# ==========================
+# ====================================
 # PAGE CONFIG
-# ==========================
+# ====================================
 
 st.set_page_config(
     page_title="Diabetic Retinopathy Detection",
@@ -18,29 +17,21 @@ st.set_page_config(
     layout="wide"
 )
 
-
-# ==========================
-# IMAGE PATHS
-# ==========================
-
 BACKGROUND_IMAGE = "image_bg.jpg"
 DEVELOPER_IMAGE = "person.jpg"
 
-
-# ==========================
-# BACKGROUND FUNCTION
-# ==========================
+# ====================================
+# BACKGROUND
+# ====================================
 
 def set_background(image_path):
 
     if os.path.exists(image_path):
 
         with open(image_path, "rb") as img:
-
             encoded = base64.b64encode(
                 img.read()
             ).decode()
-
 
         st.markdown(
             f"""
@@ -51,11 +42,10 @@ def set_background(image_path):
                 background-image:
                 linear-gradient(
                 rgba(0,0,0,0.60),
-                rgba(0,0,0,0.60)
-                ),
+                rgba(0,0,0,0.60)),
                 url("data:image/jpg;base64,{encoded}");
 
-                background-size: cover;
+                background-size:cover;
                 background-position:center;
                 background-repeat:no-repeat;
                 background-attachment:fixed;
@@ -67,34 +57,42 @@ def set_background(image_path):
             unsafe_allow_html=True
         )
 
-
-
 set_background(BACKGROUND_IMAGE)
 
+# ====================================
+# USER DATABASE
+# ====================================
 
+USER_FILE = "users.pkl"
 
-# ==========================
+def load_users():
+
+    if os.path.exists(USER_FILE):
+
+        with open(USER_FILE, "rb") as f:
+            return pickle.load(f)
+
+    return {}
+
+def save_users(users):
+
+    with open(USER_FILE, "wb") as f:
+        pickle.dump(users, f)
+
+# ====================================
 # LOAD MODEL
-# ==========================
+# ====================================
 
 @st.cache_resource
 def load_model():
 
-    model_path = "mobilenetv2_best_77.keras"
-
     model = tf.keras.models.load_model(
-        model_path,
+        "mobilenetv2_best_77.keras",
         compile=False,
         safe_mode=False
     )
 
     return model
-
-
-
-# ==========================
-# LOAD CLASS FILE
-# ==========================
 
 
 @st.cache_data
@@ -105,336 +103,288 @@ def load_classes():
         "rb"
     ) as f:
 
-        classes = pickle.load(f)
+        return pickle.load(f)
 
-    return classes
-
-
-
-# ==========================
+# ====================================
 # SESSION
-# ==========================
-
+# ====================================
 
 if "logged_in" not in st.session_state:
-
     st.session_state.logged_in = False
 
+if "page" not in st.session_state:
+    st.session_state.page = "login"
 
-
-# ==========================
-# LOGIN PAGE
-# ==========================
-
+# ====================================
+# LOGIN / SIGNUP PAGE
+# ====================================
 
 if not st.session_state.logged_in:
 
-
     st.markdown(
         """
-        <h1 style="
-        text-align:center;
-        color:white;
-        ">
+        <h1 style='text-align:center;color:white;'>
         👁️ Diabetic Retinopathy Detection System
         </h1>
         """,
         unsafe_allow_html=True
     )
 
+    st.markdown(
+        """
+        <h4 style='text-align:center;color:white;'>
+        AI Powered Retinal Disease Screening Platform
+        </h4>
+        """,
+        unsafe_allow_html=True
+    )
 
-    st.write("")
+    c1, c2, c3 = st.columns([1,1,1])
 
+    with c2:
 
-    col1,col2,col3 = st.columns([1,1,1])
+        users = load_users()
 
+        # ================= LOGIN =================
 
-    with col2:
+        if st.session_state.page == "login":
 
+            st.subheader("Doctor Login")
 
-        st.markdown(
-            """
-            <div style="
-            background:rgba(255,255,255,0.15);
-            padding:30px;
-            border-radius:20px;
-            ">
-            """,
-            unsafe_allow_html=True
-        )
+            username = st.text_input(
+                "Username"
+            )
 
+            password = st.text_input(
+                "Password",
+                type="password"
+            )
 
-        st.subheader(
-            "Doctor Login"
-        )
+            if st.button("Login"):
 
+                if (
+                    username in users
+                    and users[username] == password
+                ):
 
-        username = st.text_input(
-            "Username"
-        )
+                    st.session_state.logged_in = True
+                    st.rerun()
 
+                else:
 
-        password = st.text_input(
-            "Password",
-            type="password"
-        )
+                    st.error(
+                        "Invalid Username or Password"
+                    )
 
+            st.write("New User?")
 
-        if st.button("Login"):
+            if st.button("Create Account"):
 
-
-            if username=="doctor" and password=="1234":
-
-                st.session_state.logged_in=True
-
+                st.session_state.page = "signup"
                 st.rerun()
 
+        # ================= SIGNUP =================
 
-            else:
+        else:
 
-                st.error(
-                    "Invalid Username or Password"
-                )
+            st.subheader(
+                "Doctor Registration"
+            )
 
+            new_user = st.text_input(
+                "Create Username"
+            )
 
+            new_password = st.text_input(
+                "Create Password",
+                type="password"
+            )
 
-# ==========================
+            confirm_password = st.text_input(
+                "Confirm Password",
+                type="password"
+            )
+
+            if st.button("Register"):
+
+                if new_user in users:
+
+                    st.warning(
+                        "Username already exists."
+                    )
+
+                elif new_password != confirm_password:
+
+                    st.warning(
+                        "Passwords do not match."
+                    )
+
+                else:
+
+                    users[new_user] = new_password
+
+                    save_users(users)
+
+                    st.success(
+                        "Account Created Successfully"
+                    )
+
+                    st.session_state.page = "login"
+
+                    st.rerun()
+
+            if st.button(
+                "Back To Login"
+            ):
+
+                st.session_state.page = "login"
+                st.rerun()
+
+# ====================================
 # MAIN WEBSITE
-# ==========================
-
+# ====================================
 
 else:
 
-
     model = load_model()
-
-
-    classes = load_classes()
-
-
 
     idx_to_class = {
 
-        0:"No DR",
-        1:"Mild DR",
-        2:"Moderate DR",
-        3:"Severe DR",
-        4:"Proliferative DR"
-
+        0: "No DR",
+        1: "Mild DR",
+        2: "Moderate DR",
+        3: "Severe DR",
+        4: "Proliferative DR"
     }
-
-
 
     st.title(
         "🩺 Diabetic Retinopathy Detection"
     )
 
-
     st.write(
         """
-        Upload a retinal fundus image to detect
-        diabetic retinopathy severity.
+        Upload retinal fundus image to
+        predict diabetic retinopathy severity.
         """
     )
 
-
     st.divider()
 
+    col1, col2 = st.columns([2,1])
 
-
-    col1,col2 = st.columns([2,1])
-
-
-
-    # ======================
-    # PREDICTION SECTION
-    # ======================
-
+    # ====================================
+    # IMAGE PREDICTION
+    # ====================================
 
     with col1:
 
-
         uploaded_file = st.file_uploader(
-
             "Upload Retinal Image",
-
-            type=[
-                "jpg",
-                "jpeg",
-                "png"
-            ]
-
+            type=["jpg","jpeg","png"]
         )
 
-
-
         if uploaded_file:
-
 
             image = Image.open(
                 uploaded_file
             )
-
 
             st.image(
                 image,
                 width=450
             )
 
-
-
             img = np.array(image)
-
-
 
             img = cv2.resize(
                 img,
                 (224,224)
             )
 
-
-
-            img = img/255.0
-
-
+            img = img / 255.0
 
             img = np.expand_dims(
                 img,
                 axis=0
             )
 
-
-
             prediction = model.predict(
                 img
             )
 
-
-
-            predicted_class = np.argmax(
+            pred_class = np.argmax(
                 prediction
             )
 
+            confidence = (
+                np.max(prediction)
+                *100
+            )
 
-
-            confidence = np.max(
-                prediction
-            )*100
-
-
-
-            result = idx_to_class[
-                predicted_class
+            severity = idx_to_class[
+                pred_class
             ]
 
-
-
             st.success(
-                f"Prediction : {result}"
+                f"Severity : {severity}"
             )
-
 
             st.info(
                 f"Confidence : {confidence:.2f}%"
             )
 
-
-
             st.subheader(
-                "Medical Explanation"
+                "Medical Feedback"
             )
 
+            feedback = {
 
+                0:
+                "No diabetic retinopathy detected. Continue regular eye examinations.",
 
-            explanations = {
+                1:
+                "Mild diabetic retinopathy detected. Regular monitoring is recommended.",
 
+                2:
+                "Moderate diabetic retinopathy detected. Please consult an ophthalmologist.",
 
-            0:
-            """
-            No diabetic retinopathy detected.
-            Maintain regular eye examinations.
-            """,
+                3:
+                "Severe diabetic retinopathy detected. Immediate medical attention required.",
 
-
-            1:
-            """
-            Mild diabetic retinopathy detected.
-            Regular monitoring recommended.
-            """,
-
-
-            2:
-            """
-            Moderate diabetic retinopathy detected.
-            Consult an ophthalmologist.
-            """,
-
-
-            3:
-            """
-            Severe diabetic retinopathy detected.
-            Immediate medical attention required.
-            """,
-
-
-            4:
-            """
-            Proliferative diabetic retinopathy detected.
-            High risk condition.
-            Urgent treatment recommended.
-            """
-
+                4:
+                "Proliferative diabetic retinopathy detected. High risk of blindness. Urgent treatment recommended."
             }
 
-
-
             st.warning(
-                explanations[predicted_class]
+                feedback[pred_class]
             )
 
-
-
-
-
-    # ======================
-    # DEVELOPER SECTION
-    # ======================
-
+    # ====================================
+    # DEVELOPER
+    # ====================================
 
     with col2:
-
 
         st.subheader(
             "Developer"
         )
 
-
-        if os.path.exists(DEVELOPER_IMAGE):
+        if os.path.exists(
+            DEVELOPER_IMAGE
+        ):
 
             st.image(
                 DEVELOPER_IMAGE,
-                width=220
+                width=250
             )
-
-
 
         st.markdown(
         """
-
         ### Ashik Ajan
 
         🎓 B.Tech Computer Science
 
-
         💻 Deep Learning & AI Enthusiast
-
-
-        ### Project
-
-        Deep Learning-Based Diabetic
-        Retinopathy Detection and Severity
-        Classification Using Retinal Images.
-
 
         ### Technologies
 
@@ -447,36 +397,33 @@ else:
         ✔ MobileNetV2
 
         ✔ OpenCV
-
         """
         )
 
-
-
     st.divider()
-
-
 
     st.subheader(
         "About This Website"
     )
 
-
     st.write(
         """
-        This AI based application detects
+        This AI-powered application detects
         diabetic retinopathy severity from
         retinal fundus images.
 
-        It uses MobileNetV2 deep learning model
-        trained on retinal image datasets.
+        It assists doctors in early diagnosis
+        and helps prevent vision loss through
+        timely treatment.
         """
     )
 
+    st.divider()
 
+    if st.button(
+        "Logout"
+    ):
 
-    if st.button("Logout"):
-
-        st.session_state.logged_in=False
-
+        st.session_state.logged_in = False
+        st.session_state.page = "login"
         st.rerun()
