@@ -7,6 +7,7 @@ import base64
 import os
 import pandas as pd
 import time
+from streamlit_lottie import st_lottie
 
 from datetime import datetime
 from PIL import Image
