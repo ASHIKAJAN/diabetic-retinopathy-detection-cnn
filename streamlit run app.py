@@ -8,11 +8,22 @@ import os
 import pandas as pd
 import time
 
+from datetime import datetime
 from PIL import Image
 
-# ====================================
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer
+)
+
+from reportlab.lib.styles import (
+    getSampleStyleSheet
+)
+
+# ==========================================
 # PAGE CONFIG
-# ====================================
+# ==========================================
 
 st.set_page_config(
     page_title="Diabetic Retinopathy Detection",
@@ -23,15 +34,16 @@ st.set_page_config(
 BACKGROUND_IMAGE = "image_bg.jpg"
 DEVELOPER_IMAGE = "person.jpg"
 
-# ====================================
+# ==========================================
 # BACKGROUND
-# ====================================
+# ==========================================
 
 def set_background(image_path):
 
     if os.path.exists(image_path):
 
         with open(image_path, "rb") as img:
+
             encoded = base64.b64encode(
                 img.read()
             ).decode()
@@ -40,19 +52,30 @@ def set_background(image_path):
             f"""
             <style>
 
-            .stApp {{
-
+            .stApp{{
                 background-image:
                 linear-gradient(
                 rgba(0,0,0,0.65),
                 rgba(0,0,0,0.65)),
                 url("data:image/jpg;base64,{encoded}");
 
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
-                background-attachment: fixed;
+                background-size:cover;
+                background-position:center;
+                background-repeat:no-repeat;
+                background-attachment:fixed;
+            }}
 
+            [data-testid="metric-container"]{{
+                background:rgba(255,255,255,0.12);
+                border-radius:20px;
+                padding:20px;
+                border:1px solid rgba(255,255,255,0.2);
+            }}
+
+            div.stButton > button{{
+                border-radius:15px;
+                height:50px;
+                font-size:16px;
             }}
 
             </style>
@@ -62,9 +85,9 @@ def set_background(image_path):
 
 set_background(BACKGROUND_IMAGE)
 
-# ====================================
+# ==========================================
 # USER DATABASE
-# ====================================
+# ==========================================
 
 USER_FILE = "users.pkl"
 
@@ -82,9 +105,9 @@ def save_users(users):
     with open(USER_FILE, "wb") as f:
         pickle.dump(users, f)
 
-# ====================================
+# ==========================================
 # LOAD MODEL
-# ====================================
+# ==========================================
 
 @st.cache_resource
 def load_model():
@@ -97,19 +120,67 @@ def load_model():
     return model
 
 
-@st.cache_data
-def load_classes():
+# ==========================================
+# PDF REPORT
+# ==========================================
 
-    with open(
-        "class_indices.pkl",
-        "rb"
-    ) as f:
+def create_pdf(
+        severity,
+        confidence,
+        recommendation):
 
-        return pickle.load(f)
+    doc = SimpleDocTemplate(
+        "DR_Report.pdf"
+    )
 
-# ====================================
-# SESSION STATE
-# ====================================
+    styles = getSampleStyleSheet()
+
+    story = []
+
+    story.append(
+        Paragraph(
+            "Diabetic Retinopathy Report",
+            styles["Title"]
+        )
+    )
+
+    story.append(
+        Spacer(1, 20)
+    )
+
+    story.append(
+        Paragraph(
+            f"Date : {datetime.now()}",
+            styles["Normal"]
+        )
+    )
+
+    story.append(
+        Paragraph(
+            f"Prediction : {severity}",
+            styles["Normal"]
+        )
+    )
+
+    story.append(
+        Paragraph(
+            f"Confidence : {confidence:.2f} %",
+            styles["Normal"]
+        )
+    )
+
+    story.append(
+        Paragraph(
+            recommendation,
+            styles["Normal"]
+        )
+    )
+
+    doc.build(story)
+
+# ==========================================
+# SESSION
+# ==========================================
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -117,37 +188,30 @@ if "logged_in" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state.page = "login"
 
-# ====================================
-# LOGIN / SIGNUP PAGE
-# ====================================
+# ==========================================
+# LOGIN PAGE
+# ==========================================
 
 if not st.session_state.logged_in:
 
-    st.markdown(
-        """
-        <h1 style='text-align:center;color:white;'>
-        👁️ Diabetic Retinopathy Detection System
-        </h1>
-        """,
-        unsafe_allow_html=True
-    )
+    users = load_users()
 
-    st.markdown(
-        """
-        <h4 style='text-align:center;color:white;'>
-        AI Powered Retinal Disease Screening Platform
-        </h4>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown("""
+    <h1 style='text-align:center;color:white;'>
+    👁️ Diabetic Retinopathy Detection System
+    </h1>
+    """, unsafe_allow_html=True)
 
-    c1, c2, c3 = st.columns([1,1,1])
+    st.markdown("""
+    <h4 style='text-align:center;color:white;'>
+    AI Powered Retinal Disease Screening Platform
+    </h4>
+    """, unsafe_allow_html=True)
+
+    c1,c2,c3 = st.columns([1,1,1])
 
     with c2:
 
-        users = load_users()
-
-        # LOGIN
         if st.session_state.page == "login":
 
             st.subheader("Doctor Login")
@@ -164,8 +228,9 @@ if not st.session_state.logged_in:
             if st.button("Login"):
 
                 if (
-                    username in users
-                    and users[username] == password
+                        username in users
+                        and users[username]
+                        == password
                 ):
 
                     st.session_state.logged_in = True
@@ -174,19 +239,16 @@ if not st.session_state.logged_in:
                 else:
 
                     st.error(
-                        "Invalid Username or Password"
+                        "Invalid Credentials"
                     )
 
-            st.write("New User?")
-
             if st.button(
-                "Create Account"
+                    "Create Account"
             ):
 
                 st.session_state.page = "signup"
                 st.rerun()
 
-        # SIGNUP
         else:
 
             st.subheader(
@@ -194,170 +256,118 @@ if not st.session_state.logged_in:
             )
 
             new_user = st.text_input(
-                "Create Username"
+                "Username"
             )
 
-            new_password = st.text_input(
-                "Create Password",
+            new_pass = st.text_input(
+                "Password",
                 type="password"
             )
 
-            confirm_password = st.text_input(
+            confirm = st.text_input(
                 "Confirm Password",
                 type="password"
             )
 
             if st.button(
-                "Register"
+                    "Register"
             ):
 
                 if new_user in users:
 
                     st.warning(
-                        "Username already exists."
+                        "Username Exists"
                     )
 
-                elif (
-                    new_password
-                    != confirm_password
-                ):
+                elif new_pass != confirm:
 
                     st.warning(
-                        "Passwords do not match."
+                        "Passwords Mismatch"
                     )
 
                 else:
 
-                    users[new_user] = new_password
-
+                    users[new_user] = new_pass
                     save_users(users)
 
                     st.success(
-                        "Account Created Successfully"
+                        "Registration Successful"
                     )
 
                     st.session_state.page = "login"
                     st.rerun()
 
             if st.button(
-                "Back To Login"
+                    "Back"
             ):
 
                 st.session_state.page = "login"
                 st.rerun()
 
-# ====================================
-# MAIN WEBSITE
-# ====================================
+# ==========================================
+# MAIN APP
+# ==========================================
 
 else:
 
     model = load_model()
 
     idx_to_class = {
-        0: "No DR",
-        1: "Mild DR",
-        2: "Moderate DR",
-        3: "Severe DR",
-        4: "Proliferative DR"
+
+        0:"No DR",
+        1:"Mild DR",
+        2:"Moderate DR",
+        3:"Severe DR",
+        4:"Proliferative DR"
+
     }
 
-    # ====================================
-    # HEADER
-    # ====================================
-
-    left, right = st.columns([3,1])
+    left,right = st.columns([3,1])
 
     with left:
 
-        st.title(
-            "🩺 Diabetic Retinopathy Detection"
-        )
+        st.markdown("""
+        <h1 style='color:#00FFFF;'>
+        👁️ AI Retinal Screening System
+        </h1>
+        """,
+        unsafe_allow_html=True)
 
         st.write(
-            """
-            AI-powered retinal disease
-            screening platform using
-            MobileNetV2 Deep Learning Model.
-            """
+            "📅",
+            datetime.now().strftime(
+                "%d-%m-%Y %H:%M:%S"
+            )
         )
 
     with right:
 
-        st.markdown(
-        """
-        <div style="
-        background:rgba(255,255,255,0.12);
-        padding:15px;
-        border-radius:15px;
-        color:white;
-        text-align:center;
-        ">
+        st.info(
+            """
+            📞 6235406513
 
-        <h4>📞 Contact</h4>
-
-        Phone:<br>
-        <b>6235406513</b>
-
-        <br><br>
-
-        Email:<br>
-
-        <a href="mailto:ashikajankvkl@gmail.com"
-        style="color:#00FFFF;">
-        ashikajankvkl@gmail.com
-        </a>
-
-        </div>
-        """,
-        unsafe_allow_html=True
+            📧 ashikajankvkl@gmail.com
+            """
         )
 
     st.divider()
 
-    # ====================================
-    # HERO SECTION
-    # ====================================
+    c1,c2,c3,c4 = st.columns(4)
 
-    st.subheader(
-        "Project Highlights"
-    )
-
-    c1, c2, c3, c4 = st.columns(4)
-
-    c1.metric(
-        "Classes",
-        "5"
-    )
-
-    c2.metric(
-        "Model",
-        "MobileNetV2"
-    )
-
-    c3.metric(
-        "Input Size",
-        "224×224"
-    )
-
+    c1.metric("Classes","5")
+    c2.metric("Model","MobileNetV2")
+    c3.metric("Input","224×224")
+    c4.metric("Accuracy","77%")
 
     st.divider()
 
-    # ====================================
-    # MAIN CONTENT
-    # ====================================
-
-    col1, col2 = st.columns([2,1])
-
-    # ====================================
-    # PREDICTION SECTION
-    # ====================================
+    col1,col2 = st.columns([2,1])
 
     with col1:
 
         uploaded_file = st.file_uploader(
-            "Upload Retinal Fundus Image",
-            type=["jpg","jpeg","png"]
+            "Upload Retinal Image",
+            type=["jpg","png","jpeg"]
         )
 
         if uploaded_file:
@@ -368,8 +378,7 @@ else:
 
             st.image(
                 image,
-                width=500,
-                caption="Uploaded Image"
+                width=500
             )
 
             img = np.array(image)
@@ -379,38 +388,36 @@ else:
                 (224,224)
             )
 
-            img = img / 255.0
+            img = img/255.0
 
             img = np.expand_dims(
                 img,
                 axis=0
             )
 
-            # Progress Animation
-
             with st.spinner(
-                "🔍 AI is analyzing image..."
+                    "🔍 AI Analyzing..."
             ):
 
                 progress = st.progress(0)
 
                 for i in range(100):
+
                     time.sleep(0.01)
+
                     progress.progress(i+1)
 
                 prediction = model.predict(
                     img
                 )
 
-                progress.empty()
-
             pred_class = np.argmax(
                 prediction
             )
 
             confidence = (
-                np.max(prediction)
-                * 100
+                    np.max(prediction)
+                    *100
             )
 
             severity = idx_to_class[
@@ -418,20 +425,36 @@ else:
             ]
 
             st.success(
-                f"Severity : {severity}"
+                f"Prediction : {severity}"
             )
 
             st.info(
                 f"Confidence : {confidence:.2f}%"
             )
 
-            # Probability Chart
+            if pred_class == 0:
+
+                st.success(
+                    "🟢 LOW RISK"
+                )
+
+            elif pred_class <= 2:
+
+                st.warning(
+                    "🟠 MODERATE RISK"
+                )
+
+            else:
+
+                st.error(
+                    "🔴 HIGH RISK"
+                )
 
             st.subheader(
                 "Prediction Probability"
             )
 
-            probs = prediction[0] * 100
+            probs = prediction[0]*100
 
             df = pd.DataFrame({
 
@@ -451,28 +474,22 @@ else:
                 )
             )
 
-            # Medical Feedback
-
-            st.subheader(
-                "Medical Feedback"
-            )
-
             feedback = {
 
                 0:
-                "No diabetic retinopathy detected. Continue regular eye examinations.",
+                "No diabetic retinopathy detected.",
 
                 1:
-                "Mild diabetic retinopathy detected. Regular monitoring is recommended.",
+                "Regular monitoring recommended.",
 
                 2:
-                "Moderate diabetic retinopathy detected. Please consult an ophthalmologist.",
+                "Consult ophthalmologist.",
 
                 3:
-                "Severe diabetic retinopathy detected. Immediate medical attention required.",
+                "Immediate medical attention required.",
 
                 4:
-                "Proliferative diabetic retinopathy detected. High risk of blindness. Urgent treatment recommended."
+                "Urgent treatment recommended."
 
             }
 
@@ -480,9 +497,38 @@ else:
                 feedback[pred_class]
             )
 
-    # ====================================
-    # DEVELOPER SECTION
-    # ====================================
+            report = f"""
+Prediction : {severity}
+
+Confidence : {confidence:.2f} %
+
+Recommendation :
+
+{feedback[pred_class]}
+"""
+
+            st.download_button(
+                "📄 Download Report",
+                report,
+                file_name="DR_Report.txt"
+            )
+
+            create_pdf(
+                severity,
+                confidence,
+                feedback[pred_class]
+            )
+
+            with open(
+                    "DR_Report.pdf",
+                    "rb"
+            ) as file:
+
+                st.download_button(
+                    "📄 Download PDF Report",
+                    file,
+                    file_name="DR_Report.pdf"
+                )
 
     with col2:
 
@@ -491,7 +537,7 @@ else:
         )
 
         if os.path.exists(
-            DEVELOPER_IMAGE
+                DEVELOPER_IMAGE
         ):
 
             st.image(
@@ -499,33 +545,36 @@ else:
                 width=250
             )
 
-        st.markdown(
-        """
-        ### Ashik Ajan
+        st.markdown("""
+### Ashik Ajan
 
-        🎓 B.Tech Computer Science
+🎓 B.Tech Computer Science
 
-        💻 Deep Learning & AI Enthusiast
+💻 Deep Learning & AI Enthusiast
 
-        ### Technologies
-
-        ✔ Python
-
-        ✔ TensorFlow
-
-        ✔ Streamlit
-
-        ✔ MobileNetV2
-
-        ✔ OpenCV
-        """
-        )
+✔ Python  
+✔ TensorFlow  
+✔ Streamlit  
+✔ MobileNetV2  
+✔ OpenCV
+""")
 
     st.divider()
 
-    # ====================================
-    # ABOUT
-    # ====================================
+    st.subheader(
+        "MobileNetV2 Architecture"
+    )
+
+    if os.path.exists(
+            "mobilenet_architecture.png"
+    ):
+
+        st.image(
+            "mobilenet_architecture.png",
+            use_container_width=True
+        )
+
+    st.divider()
 
     st.subheader(
         "About This Website"
@@ -533,61 +582,16 @@ else:
 
     st.write(
         """
-        This AI-powered application detects
-        diabetic retinopathy severity from
-        retinal fundus images.
-
-        It assists doctors in early diagnosis
-        and helps prevent vision loss through
-        timely treatment.
-        """
-    )
-
-    st.info(
-        """
-        Workflow:
-
-        Upload Image ➜ Preprocessing ➜
-        MobileNetV2 Prediction ➜
-        Severity Classification ➜
-        Medical Feedback
-        """
-    )
-
-    st.divider()
-
-    # ====================================
-    # FOOTER
-    # ====================================
-
-    st.markdown(
-    """
-    <div style='text-align:center;color:white;'>
-
-    ❤️ Developed By <b>Ashik Ajan</b>
-
-    <br><br>
-
-    Deep Learning Based Diabetic
-    Retinopathy Detection System
-
-    <br><br>
-
-    📞 6235406513
-
-    <br>
-
-    📧 ashikajankvkl@gmail.com
-
-    </div>
-    """,
-    unsafe_allow_html=True
+This AI application detects diabetic
+retinopathy severity using retinal
+fundus images and deep learning.
+"""
     )
 
     st.divider()
 
     if st.button(
-        "Logout"
+            "Logout"
     ):
 
         st.session_state.logged_in = False
