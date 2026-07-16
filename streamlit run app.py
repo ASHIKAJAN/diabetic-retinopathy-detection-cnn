@@ -194,108 +194,146 @@ if "page" not in st.session_state:
 # LOGIN PAGE
 # ==========================================
 
-
 if not st.session_state.logged_in:
 
     users = load_users()
 
-    st.markdown(
-    """
-    <h1 class='glow-title'
-    style='text-align:center;'>
+    st.markdown("""
+    <h1 style='
+        text-align:center;
+        color:#00FFFF;
+        text-shadow:0px 0px 20px cyan;'>
 
-    👁️ Diabetic Retinopathy Detection System
+        👁️ Diabetic Retinopathy Detection System
 
     </h1>
-    """,
-    unsafe_allow_html=True
-    )
+    """, unsafe_allow_html=True)
 
-    st.markdown(
-    """
+    st.markdown("""
     <h4 style='text-align:center;color:white;'>
 
     AI Powered Retinal Disease Screening Platform
 
     </h4>
-    """,
-    unsafe_allow_html=True
-    )
+    """, unsafe_allow_html=True)
 
     st.write("")
 
-    # HERO STATS
+    # ================= HERO STATS =================
 
-    c1,c2,c3 = st.columns(3)
+    c1, c2, c3 = st.columns(3)
 
-    c1.metric(
-        "Accuracy",
-        "77%"
-    )
+    with c1:
+        st.metric("Model Accuracy", "77%")
 
-    c2.metric(
-        "Classes",
-        "5"
-    )
+    with c2:
+        st.metric("Disease Classes", "5")
 
-    c3.metric(
-        "Model",
-        "MobileNetV2"
-    )
+    with c3:
+        st.metric("Architecture", "MobileNetV2")
 
     st.success(
-        "💡 Early detection can prevent up to 95% of vision loss."
+        "💡 Early detection can prevent up to 95% of diabetes-related vision loss."
     )
 
     st.write("")
 
-    left,right = st.columns([1.3,1])
+    # ================= MAIN LOGIN SECTION =================
 
-    # =====================================
-    # LEFT SIDE ANIMATION
-    # =====================================
+    left, right = st.columns([1.2, 1])
 
+    # LEFT SIDE
     with left:
 
-        st_lottie(
-            lottie_eye,
-            height=450,
-            key="eye"
-        )
+        st.markdown("""
+        <div style="
+            background:rgba(255,255,255,0.10);
+            padding:40px;
+            border-radius:25px;
+            backdrop-filter:blur(15px);
+            text-align:center;
+            box-shadow:0px 8px 32px rgba(0,0,0,0.35);
+        ">
 
-    # =====================================
-    # RIGHT SIDE LOGIN CARD
-    # =====================================
+        <h1 style="font-size:120px;">
+        👁️
+        </h1>
 
+        <h2 style="color:white;">
+        AI Retinal Screening System
+        </h2>
+
+        <br>
+
+        <p style="color:white;font-size:18px;">
+
+        ✔ Deep Learning Based Detection
+
+        <br><br>
+
+        ✔ Automated Severity Classification
+
+        <br><br>
+
+        ✔ Assists Early Diagnosis
+
+        </p>
+
+        <br>
+
+        <h4 style="color:#00FFAA;">
+        🟢 System Ready
+        </h4>
+
+        </div>
+        """, unsafe_allow_html=True)
+
+    # RIGHT SIDE
     with right:
 
+        st.markdown("""
+        <style>
+
+        .login-card{
+
+            background:rgba(255,255,255,0.12);
+
+            padding:35px;
+
+            border-radius:25px;
+
+            backdrop-filter:blur(15px);
+
+            border:1px solid rgba(255,255,255,0.2);
+
+            box-shadow:
+                0px 8px 32px rgba(0,0,0,0.35);
+
+        }
+
+        </style>
+        """, unsafe_allow_html=True)
+
         st.markdown(
-        """
-        <div class='login-card'>
-        """,
-        unsafe_allow_html=True
+            '<div class="login-card">',
+            unsafe_allow_html=True
         )
 
         if st.session_state.page == "login":
 
-            st.markdown(
-            """
-            <h2 style='text-align:center;
-            color:white;'>
+            st.markdown("""
+            <h2 style='text-align:center;color:white;'>
 
-            👨‍⚕️ Doctor Portal
+            👨‍⚕️ Doctor Login
 
             </h2>
 
-            <p style='text-align:center;
-            color:white;'>
+            <p style='text-align:center;color:white;'>
 
-            Sign in to continue
+            Sign in to access the system
 
             </p>
-            """,
-            unsafe_allow_html=True
-            )
+            """, unsafe_allow_html=True)
 
             username = st.text_input(
                 "👤 Username"
@@ -313,15 +351,12 @@ if not st.session_state.logged_in:
 
                 if (
                     username in users
-                    and users[username]
-                    == password
+                    and users[username] == password
                 ):
 
                     st.success(
                         "Login Successful"
                     )
-
-                    time.sleep(1)
 
                     st.session_state.logged_in = True
                     st.rerun()
@@ -329,7 +364,7 @@ if not st.session_state.logged_in:
                 else:
 
                     st.error(
-                        "Invalid Credentials"
+                        "Invalid Username or Password"
                     )
 
             st.write("")
@@ -344,28 +379,24 @@ if not st.session_state.logged_in:
 
         else:
 
-            st.markdown(
-            """
-            <h2 style='text-align:center;
-            color:white;'>
+            st.markdown("""
+            <h2 style='text-align:center;color:white;'>
 
             👨‍⚕️ Doctor Registration
 
             </h2>
-            """,
-            unsafe_allow_html=True
-            )
+            """, unsafe_allow_html=True)
 
             new_user = st.text_input(
-                "👤 Username"
+                "👤 Create Username"
             )
 
-            new_pass = st.text_input(
-                "🔒 Password",
+            new_password = st.text_input(
+                "🔒 Create Password",
                 type="password"
             )
 
-            confirm = st.text_input(
+            confirm_password = st.text_input(
                 "🔒 Confirm Password",
                 type="password"
             )
@@ -378,26 +409,27 @@ if not st.session_state.logged_in:
                 if new_user in users:
 
                     st.warning(
-                        "Username Exists"
+                        "Username already exists."
                     )
 
-                elif new_pass != confirm:
+                elif (
+                    new_password
+                    != confirm_password
+                ):
 
                     st.warning(
-                        "Passwords Mismatch"
+                        "Passwords do not match."
                     )
 
                 else:
 
-                    users[new_user] = new_pass
+                    users[new_user] = new_password
 
                     save_users(users)
 
                     st.success(
                         "Registration Successful"
                     )
-
-                    time.sleep(1)
 
                     st.session_state.page = "login"
                     st.rerun()
@@ -417,15 +449,13 @@ if not st.session_state.logged_in:
 
     st.divider()
 
-    st.info(
-        """
-        🟢 AI Model Loaded
+    st.info("""
+    🟢 AI Model Loaded
 
-        🟢 Hospital Screening Mode Active
+    🟢 Hospital Screening Mode Active
 
-        🟢 Ready For Prediction
-        """
-    )
+    🟢 Ready For Prediction
+    """)
 # ==========================================
 # MAIN APP
 # ==========================================
