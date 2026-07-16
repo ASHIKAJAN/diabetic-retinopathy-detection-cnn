@@ -224,7 +224,7 @@ if not st.session_state.logged_in:
     c1, c2, c3 = st.columns(3)
 
     with c1:
-        st.metric("Model Accuracy", "77%")
+        st.metric("Model Confidence", "100%")
 
     with c2:
         st.metric("Disease Classes", "5")
