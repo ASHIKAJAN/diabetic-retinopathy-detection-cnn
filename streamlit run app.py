@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import tensorflow as tf
 import numpy as np
@@ -5,6 +6,9 @@ import cv2
 import pickle
 import base64
 import os
+import pandas as pd
+import time
+
 from PIL import Image
 
 # ====================================
@@ -41,14 +45,14 @@ def set_background(image_path):
 
                 background-image:
                 linear-gradient(
-                rgba(0,0,0,0.60),
-                rgba(0,0,0,0.60)),
+                rgba(0,0,0,0.65),
+                rgba(0,0,0,0.65)),
                 url("data:image/jpg;base64,{encoded}");
 
-                background-size:cover;
-                background-position:center;
-                background-repeat:no-repeat;
-                background-attachment:fixed;
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
 
             }}
 
@@ -83,7 +87,6 @@ def save_users(users):
 # LOAD MODEL
 # ====================================
 
-
 @st.cache_resource
 def load_model():
 
@@ -106,7 +109,7 @@ def load_classes():
         return pickle.load(f)
 
 # ====================================
-# SESSION
+# SESSION STATE
 # ====================================
 
 if "logged_in" not in st.session_state:
@@ -145,8 +148,7 @@ if not st.session_state.logged_in:
 
         users = load_users()
 
-        # ================= LOGIN =================
-
+        # LOGIN
         if st.session_state.page == "login":
 
             st.subheader("Doctor Login")
@@ -178,13 +180,14 @@ if not st.session_state.logged_in:
 
             st.write("New User?")
 
-            if st.button("Create Account"):
+            if st.button(
+                "Create Account"
+            ):
 
                 st.session_state.page = "signup"
                 st.rerun()
 
-        # ================= SIGNUP =================
-
+        # SIGNUP
         else:
 
             st.subheader(
@@ -205,7 +208,9 @@ if not st.session_state.logged_in:
                 type="password"
             )
 
-            if st.button("Register"):
+            if st.button(
+                "Register"
+            ):
 
                 if new_user in users:
 
@@ -213,7 +218,10 @@ if not st.session_state.logged_in:
                         "Username already exists."
                     )
 
-                elif new_password != confirm_password:
+                elif (
+                    new_password
+                    != confirm_password
+                ):
 
                     st.warning(
                         "Passwords do not match."
@@ -230,7 +238,6 @@ if not st.session_state.logged_in:
                     )
 
                     st.session_state.page = "login"
-
                     st.rerun()
 
             if st.button(
@@ -249,7 +256,6 @@ else:
     model = load_model()
 
     idx_to_class = {
-
         0: "No DR",
         1: "Mild DR",
         2: "Moderate DR",
@@ -257,29 +263,105 @@ else:
         4: "Proliferative DR"
     }
 
-    st.title(
-        "🩺 Diabetic Retinopathy Detection"
+    # ====================================
+    # HEADER
+    # ====================================
+
+    left, right = st.columns([3,1])
+
+    with left:
+
+        st.title(
+            "🩺 Diabetic Retinopathy Detection"
+        )
+
+        st.write(
+            """
+            AI-powered retinal disease
+            screening platform using
+            MobileNetV2 Deep Learning Model.
+            """
+        )
+
+    with right:
+
+        st.markdown(
+        """
+        <div style="
+        background:rgba(255,255,255,0.12);
+        padding:15px;
+        border-radius:15px;
+        color:white;
+        text-align:center;
+        ">
+
+        <h4>📞 Contact</h4>
+
+        Phone:<br>
+        <b>6235406513</b>
+
+        <br><br>
+
+        Email:<br>
+
+        <a href="mailto:ashikajankvkl@gmail.com"
+        style="color:#00FFFF;">
+        ashikajankvkl@gmail.com
+        </a>
+
+        </div>
+        """,
+        unsafe_allow_html=True
+        )
+
+    st.divider()
+
+    # ====================================
+    # HERO SECTION
+    # ====================================
+
+    st.subheader(
+        "Project Highlights"
     )
 
-    st.write(
-        """
-        Upload retinal fundus image to
-        predict diabetic retinopathy severity.
-        """
+    c1, c2, c3, c4 = st.columns(4)
+
+    c1.metric(
+        "Classes",
+        "5"
+    )
+
+    c2.metric(
+        "Model",
+        "MobileNetV2"
+    )
+
+    c3.metric(
+        "Input Size",
+        "224×224"
+    )
+
+    c4.metric(
+        "Accuracy",
+        "77%"
     )
 
     st.divider()
 
+    # ====================================
+    # MAIN CONTENT
+    # ====================================
+
     col1, col2 = st.columns([2,1])
 
     # ====================================
-    # IMAGE PREDICTION
+    # PREDICTION SECTION
     # ====================================
 
     with col1:
 
         uploaded_file = st.file_uploader(
-            "Upload Retinal Image",
+            "Upload Retinal Fundus Image",
             type=["jpg","jpeg","png"]
         )
 
@@ -287,11 +369,12 @@ else:
 
             image = Image.open(
                 uploaded_file
-            )
+            ).convert("RGB")
 
             st.image(
                 image,
-                width=450
+                width=500,
+                caption="Uploaded Image"
             )
 
             img = np.array(image)
@@ -308,9 +391,23 @@ else:
                 axis=0
             )
 
-            prediction = model.predict(
-                img
-            )
+            # Progress Animation
+
+            with st.spinner(
+                "🔍 AI is analyzing image..."
+            ):
+
+                progress = st.progress(0)
+
+                for i in range(100):
+                    time.sleep(0.01)
+                    progress.progress(i+1)
+
+                prediction = model.predict(
+                    img
+                )
+
+                progress.empty()
 
             pred_class = np.argmax(
                 prediction
@@ -318,7 +415,7 @@ else:
 
             confidence = (
                 np.max(prediction)
-                *100
+                * 100
             )
 
             severity = idx_to_class[
@@ -332,6 +429,34 @@ else:
             st.info(
                 f"Confidence : {confidence:.2f}%"
             )
+
+            # Probability Chart
+
+            st.subheader(
+                "Prediction Probability"
+            )
+
+            probs = prediction[0] * 100
+
+            df = pd.DataFrame({
+
+                "Severity":
+                list(
+                    idx_to_class.values()
+                ),
+
+                "Probability":
+                probs
+
+            })
+
+            st.bar_chart(
+                df.set_index(
+                    "Severity"
+                )
+            )
+
+            # Medical Feedback
 
             st.subheader(
                 "Medical Feedback"
@@ -353,6 +478,7 @@ else:
 
                 4:
                 "Proliferative diabetic retinopathy detected. High risk of blindness. Urgent treatment recommended."
+
             }
 
             st.warning(
@@ -360,7 +486,7 @@ else:
             )
 
     # ====================================
-    # DEVELOPER
+    # DEVELOPER SECTION
     # ====================================
 
     with col2:
@@ -402,6 +528,10 @@ else:
 
     st.divider()
 
+    # ====================================
+    # ABOUT
+    # ====================================
+
     st.subheader(
         "About This Website"
     )
@@ -418,6 +548,47 @@ else:
         """
     )
 
+    st.info(
+        """
+        Workflow:
+
+        Upload Image ➜ Preprocessing ➜
+        MobileNetV2 Prediction ➜
+        Severity Classification ➜
+        Medical Feedback
+        """
+    )
+
+    st.divider()
+
+    # ====================================
+    # FOOTER
+    # ====================================
+
+    st.markdown(
+    """
+    <div style='text-align:center;color:white;'>
+
+    ❤️ Developed By <b>Ashik Ajan</b>
+
+    <br><br>
+
+    Deep Learning Based Diabetic
+    Retinopathy Detection System
+
+    <br><br>
+
+    📞 6235406513
+
+    <br>
+
+    📧 ashikajankvkl@gmail.com
+
+    </div>
+    """,
+    unsafe_allow_html=True
+    )
+
     st.divider()
 
     if st.button(
@@ -427,3 +598,4 @@ else:
         st.session_state.logged_in = False
         st.session_state.page = "login"
         st.rerun()
+```
