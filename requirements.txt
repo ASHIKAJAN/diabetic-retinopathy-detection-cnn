@@ -7,3 +7,5 @@ opencv-python-headless==4.11.0.86
 scikit-learn==1.6.1
 matplotlib==3.10.0
 reportlab
+streamlit-lottie==0.0.5
+requests
