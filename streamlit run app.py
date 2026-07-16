@@ -314,10 +314,6 @@ if not st.session_state.logged_in:
         </style>
         """, unsafe_allow_html=True)
 
-        st.markdown(
-            '<div class="login-card">',
-            unsafe_allow_html=True
-        )
 
         if st.session_state.page == "login":
 
