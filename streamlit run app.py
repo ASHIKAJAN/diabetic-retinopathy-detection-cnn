@@ -352,7 +352,7 @@ else:
 
     st.divider()
 
-    c1,c2,c3, = st.columns(4)
+    c1,c2,c3,c4 = st.columns(4)
 
     c1.metric("Classes","5")
     c2.metric("Model","MobileNetV2")
