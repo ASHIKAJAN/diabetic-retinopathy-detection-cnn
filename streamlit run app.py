@@ -192,46 +192,134 @@ if "page" not in st.session_state:
 # LOGIN PAGE
 # ==========================================
 
+
 if not st.session_state.logged_in:
 
     users = load_users()
 
-    st.markdown("""
-    <h1 style='text-align:center;color:white;'>
+    st.markdown(
+    """
+    <h1 class='glow-title'
+    style='text-align:center;'>
+
     👁️ Diabetic Retinopathy Detection System
+
     </h1>
-    """, unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+    )
 
-    st.markdown("""
+    st.markdown(
+    """
     <h4 style='text-align:center;color:white;'>
+
     AI Powered Retinal Disease Screening Platform
+
     </h4>
-    """, unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+    )
 
-    c1,c2,c3 = st.columns([1,1,1])
+    st.write("")
 
-    with c2:
+    # HERO STATS
+
+    c1,c2,c3 = st.columns(3)
+
+    c1.metric(
+        "Accuracy",
+        "77%"
+    )
+
+    c2.metric(
+        "Classes",
+        "5"
+    )
+
+    c3.metric(
+        "Model",
+        "MobileNetV2"
+    )
+
+    st.success(
+        "💡 Early detection can prevent up to 95% of vision loss."
+    )
+
+    st.write("")
+
+    left,right = st.columns([1.3,1])
+
+    # =====================================
+    # LEFT SIDE ANIMATION
+    # =====================================
+
+    with left:
+
+        st_lottie(
+            lottie_eye,
+            height=450,
+            key="eye"
+        )
+
+    # =====================================
+    # RIGHT SIDE LOGIN CARD
+    # =====================================
+
+    with right:
+
+        st.markdown(
+        """
+        <div class='login-card'>
+        """,
+        unsafe_allow_html=True
+        )
 
         if st.session_state.page == "login":
 
-            st.subheader("Doctor Login")
+            st.markdown(
+            """
+            <h2 style='text-align:center;
+            color:white;'>
+
+            👨‍⚕️ Doctor Portal
+
+            </h2>
+
+            <p style='text-align:center;
+            color:white;'>
+
+            Sign in to continue
+
+            </p>
+            """,
+            unsafe_allow_html=True
+            )
 
             username = st.text_input(
-                "Username"
+                "👤 Username"
             )
 
             password = st.text_input(
-                "Password",
+                "🔒 Password",
                 type="password"
             )
 
-            if st.button("Login"):
+            if st.button(
+                "🚀 Login",
+                use_container_width=True
+            ):
 
                 if (
-                        username in users
-                        and users[username]
-                        == password
+                    username in users
+                    and users[username]
+                    == password
                 ):
+
+                    st.success(
+                        "Login Successful"
+                    )
+
+                    time.sleep(1)
 
                     st.session_state.logged_in = True
                     st.rerun()
@@ -242,8 +330,11 @@ if not st.session_state.logged_in:
                         "Invalid Credentials"
                     )
 
+            st.write("")
+
             if st.button(
-                    "Create Account"
+                "📝 Create Account",
+                use_container_width=True
             ):
 
                 st.session_state.page = "signup"
@@ -251,26 +342,35 @@ if not st.session_state.logged_in:
 
         else:
 
-            st.subheader(
-                "Doctor Registration"
+            st.markdown(
+            """
+            <h2 style='text-align:center;
+            color:white;'>
+
+            👨‍⚕️ Doctor Registration
+
+            </h2>
+            """,
+            unsafe_allow_html=True
             )
 
             new_user = st.text_input(
-                "Username"
+                "👤 Username"
             )
 
             new_pass = st.text_input(
-                "Password",
+                "🔒 Password",
                 type="password"
             )
 
             confirm = st.text_input(
-                "Confirm Password",
+                "🔒 Confirm Password",
                 type="password"
             )
 
             if st.button(
-                    "Register"
+                "✅ Register",
+                use_container_width=True
             ):
 
                 if new_user in users:
@@ -288,22 +388,42 @@ if not st.session_state.logged_in:
                 else:
 
                     users[new_user] = new_pass
+
                     save_users(users)
 
                     st.success(
                         "Registration Successful"
                     )
 
+                    time.sleep(1)
+
                     st.session_state.page = "login"
                     st.rerun()
 
             if st.button(
-                    "Back"
+                "⬅ Back To Login",
+                use_container_width=True
             ):
 
                 st.session_state.page = "login"
                 st.rerun()
 
+        st.markdown(
+            "</div>",
+            unsafe_allow_html=True
+        )
+
+    st.divider()
+
+    st.info(
+        """
+        🟢 AI Model Loaded
+
+        🟢 Hospital Screening Mode Active
+
+        🟢 Ready For Prediction
+        """
+    )
 # ==========================================
 # MAIN APP
 # ==========================================
