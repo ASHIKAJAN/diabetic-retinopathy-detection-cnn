@@ -340,10 +340,6 @@ else:
         "224×224"
     )
 
-    c4.metric(
-        "Accuracy",
-        "77%"
-    )
 
     st.divider()
 
