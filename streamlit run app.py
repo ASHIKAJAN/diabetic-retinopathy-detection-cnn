@@ -576,9 +576,7 @@ else:
                 f"Prediction : {severity}"
             )
 
-            st.info(
-                f"Confidence : {confidence:.2f}%"
-            )
+           
 
             if pred_class == 0:
 
